@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Button,
   FormControl,
@@ -23,7 +25,6 @@ import {
   InputLeftAddon,
 } from '@chakra-ui/react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { useRouter } from 'next/navigation';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -181,6 +182,14 @@ export function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </FormControl>
+              
+              <Box alignSelf="flex-end">
+                <Link href="/recuperar-senha" passHref>
+                  <Text color="brand.500" fontSize="sm" _hover={{ textDecoration: 'underline' }}>
+                    Esqueceu sua senha?
+                  </Text>
+                </Link>
+              </Box>
 
               <Button
                 type="submit"
