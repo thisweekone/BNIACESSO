@@ -25,12 +25,14 @@ export async function POST(request: Request) {
       }
     );
     
-    // Configurar o transporte de email - substitua por suas configurações de SMTP
+    // Configurar o transporte de email com as configurações da Hostinger
     const transporter = nodemailer.createTransport({
-      service: 'gmail',  // ou outro serviço como 'smtp.office365.com'
+      host: process.env.EMAIL_HOST || 'smtp.hostinger.com', // Servidor SMTP da Hostinger
+      port: parseInt(process.env.EMAIL_PORT || '465'),     // Porta 465 para SSL, 587 para TLS
+      secure: process.env.EMAIL_SECURE === 'true',         // true para 465, false para outras portas
       auth: {
-        user: process.env.EMAIL_USER || 'seu-email@gmail.com',
-        pass: process.env.EMAIL_PASSWORD || 'sua-senha-de-app'
+        user: process.env.EMAIL_USER || 'seu-email@seudominio.com',
+        pass: process.env.EMAIL_PASSWORD || 'sua-senha-de-email'
       }
     });
     
