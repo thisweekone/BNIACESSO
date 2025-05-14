@@ -204,7 +204,7 @@ export default function AtualizarSenha() {
         <Flex justify="center" mt={6}>
           <ChakraLink as={Link} href="/login" color="brand.500">
             <Flex align="center">
-              <ArrowBackIcon mr={2} />
+              <FiArrowLeft style={{marginRight: '8px'}} />
               Voltar para login
             </Flex>
           </ChakraLink>
