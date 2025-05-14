@@ -180,6 +180,7 @@ export default function SolicitacoesCadastro() {
             phone: selectedRequest.phone,
             status: 'aprovado',
             role: formData.role,
+            specialty: 'Não informado', // Adicionando o campo obrigatório
             group_id: formData.group_id || null,
             approved_at: new Date().toISOString(),
             created_at: new Date().toISOString()
@@ -200,8 +201,26 @@ export default function SolicitacoesCadastro() {
       
       if (updateError) throw updateError;
       
-      // 3. Enviar email com instruções (simulado, isso seria feito por um backend)
-      console.log(`Enviar email para ${selectedRequest.email} com instruções para acessar a plataforma`);
+      // 3. Enviar email com a senha temporária usando nossa API
+      const emailResponse = await fetch('/api/email/send-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: selectedRequest.email,
+          password: tempPassword,
+          name: selectedRequest.name
+        }),
+      });
+      
+      if (!emailResponse.ok) {
+        const emailError = await emailResponse.json();
+        console.error('Erro ao enviar email:', emailError);
+        // Continuamos mesmo com erro no email, pois o usuário já foi criado
+      }
+      
+      console.log(`Email enviado para ${selectedRequest.email} com a senha temporária.`);
       
       toast({
         title: 'Membro aprovado com sucesso!',
