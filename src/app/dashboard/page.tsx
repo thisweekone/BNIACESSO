@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Box,
   Grid,
@@ -14,6 +15,7 @@ import {
   Flex,
   Icon,
   Badge,
+  Spinner,
 } from '@chakra-ui/react';
 import { DashboardCard } from '@/components/dashboard/DashboardCard';
 import { DashboardReferencesList } from '@/components/dashboard/DashboardReferencesList';
@@ -21,31 +23,122 @@ import { DashboardReferencesList } from '@/components/dashboard/DashboardReferen
 import { DashboardOpenRequests } from '@/components/dashboard/DashboardOpenRequests';
 import { FiUsers, FiTarget, FiDollarSign, FiArrowRight, FiShoppingBag, FiExternalLink } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function Dashboard() {
   const bgColor = useColorModeValue('white', 'gray.700');
   const router = useRouter();
-
-  const stats = [
+  const supabase = createClientComponentClient();
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  
+  // Estatísticas do usuário
+  const [stats, setStats] = useState([
     {
       label: 'Referências Dadas',
-      value: '24',
+      value: '0',
       icon: FiTarget,
       href: '/dashboard/referencias',
+      loading: true
     },
     {
       label: 'Referências Recebidas',
-      value: '18',
+      value: '0',
       icon: FiUsers,
       href: '/dashboard/referencias',
+      loading: true
     },
     {
       label: 'Negócios Fechados',
-      value: 'R$ 45.000',
+      value: 'R$ 0',
       icon: FiDollarSign,
       href: '/dashboard/casos-sucesso',
+      loading: true
     },
-  ];
+  ]);
+  
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        // Obter usuário logado
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+        
+        setUserId(user.id);
+        setUserEmail(user.email);
+        
+        // Buscar os dados do membro
+        const { data: memberData } = await supabase
+          .from('members')
+          .select('id, email')
+          .eq('id', user.id)
+          .single();
+        
+        if (!memberData) {
+          setLoading(false);
+          return;
+        }
+        
+        // Buscar referências dadas pelo usuário
+        const { data: referencesGiven, error: referencesGivenError } = await supabase
+          .from('reference_requests')
+          .select('id')
+          .eq('user_id', user.id);
+          
+        // Buscar referências recebidas pelo usuário (onde o email é mencionado)
+        const { data: referencesReceived, error: referencesReceivedError } = await supabase
+          .from('reference_requests')
+          .select('id')
+          .eq('receiver_email', user.email);
+          
+        // Buscar negócios fechados relacionados ao usuário
+        const { data: closedDeals, error: closedDealsError } = await supabase
+          .from('success_cases')
+          .select('amount')
+          .or(`user_id.eq.${user.id},member_id.eq.${user.id}`)
+          .eq('status', 'closed');
+          
+        // Calcular valor total dos negócios fechados
+        const totalAmount = closedDeals?.reduce((sum, deal) => sum + (parseFloat(deal.amount) || 0), 0) || 0;
+        
+        // Atualizar as estatísticas com os dados reais
+        setStats([
+          {
+            label: 'Referências Dadas',
+            value: referencesGiven?.length.toString() || '0',
+            icon: FiTarget,
+            href: '/dashboard/referencias',
+            loading: false
+          },
+          {
+            label: 'Referências Recebidas',
+            value: referencesReceived?.length.toString() || '0',
+            icon: FiUsers,
+            href: '/dashboard/referencias',
+            loading: false
+          },
+          {
+            label: 'Negócios Fechados',
+            value: `R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            icon: FiDollarSign,
+            href: '/dashboard/casos-sucesso',
+            loading: false
+          },
+        ]);
+      } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchUserData();
+  }, [supabase]);
 
   return (
     <Box>
@@ -67,7 +160,9 @@ export default function Dashboard() {
             <Flex align="center" justify="space-between">
               <Stat>
                 <StatLabel>{stat.label}</StatLabel>
-                <StatNumber>{stat.value}</StatNumber>
+                <StatNumber>
+                  {stat.loading ? <Spinner size="sm" color="brand.500" /> : stat.value}
+                </StatNumber>
               </Stat>
               <Icon as={stat.icon} boxSize={6} color="brand.500" />
             </Flex>
