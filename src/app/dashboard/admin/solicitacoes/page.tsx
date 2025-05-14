@@ -48,6 +48,7 @@ export default function SolicitacoesCadastro() {
   const [adminRole, setAdminRole] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     group_id: '',
+    role: 'membro', // Valor padrão para o perfil de acesso
     rejection_reason: '',
   });
   
@@ -178,7 +179,7 @@ export default function SolicitacoesCadastro() {
             email: selectedRequest.email,
             phone: selectedRequest.phone,
             status: 'aprovado',
-            role: 'membro',
+            role: formData.role,
             group_id: formData.group_id || null,
             approved_at: new Date().toISOString(),
             created_at: new Date().toISOString()
@@ -429,6 +430,22 @@ export default function SolicitacoesCadastro() {
                         {group.name}
                       </option>
                     ))}
+                  </Select>
+                </FormControl>
+                
+                <FormControl>
+                  <FormLabel>Perfil de Acesso</FormLabel>
+                  <Select 
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                  >
+                    <option value="membro">Membro</option>
+                    <option value="moderador_grupo">Moderador de Grupo</option>
+                    <option value="administrativo_grupo">Administrador de Grupo</option>
+                    {adminRole === 'administrador_plataforma' && (
+                      <option value="administrador_plataforma">Administrador da Plataforma</option>
+                    )}
                   </Select>
                 </FormControl>
                 
