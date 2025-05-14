@@ -1,0 +1,322 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import {
+  VStack,
+  Heading,
+  Button,
+  useToast,
+  Box,
+  Text,
+  Flex,
+  Tag,
+  TagLabel,
+  TagCloseButton,
+  useColorModeValue,
+  Input,
+  Spinner,
+  Tooltip
+} from '@chakra-ui/react';
+import { FiPlus } from 'react-icons/fi';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+
+interface ServicesManagerProps {
+  memberId: string;
+  initialServices?: string[];
+}
+
+export default function ServicesManager({ memberId, initialServices = [] }: ServicesManagerProps) {
+  const [services, setServices] = useState<string[]>(initialServices);
+  const [newService, setNewService] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showInput, setShowInput] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const toast = useToast();
+  const bgColor = useColorModeValue('white', 'gray.800');
+  const tagBg = useColorModeValue('brand.100', 'brand.900');
+  const tagColor = useColorModeValue('brand.800', 'brand.200');
+
+  useEffect(() => {
+    if (initialServices.length > 0) {
+      setServices(initialServices);
+    } else {
+      fetchServices();
+    }
+  }, [memberId, initialServices]);
+
+  useEffect(() => {
+    if (showInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [showInput]);
+
+  const fetchServices = async () => {
+    if (!memberId || memberId === 'temp-id') return;
+    
+    try {
+      setLoading(true);
+      const supabase = createClientComponentClient();
+      
+      // Buscar serviços na tabela member_services
+      const { data, error } = await supabase
+        .from('member_services')
+        .select('service_name')
+        .eq('member_id', memberId);
+      
+      if (error) {
+        console.error('Erro ao buscar serviços:', error);
+        return;
+      }
+      
+      if (data) {
+        // Extrair nomes dos serviços
+        const serviceNames = data.map(item => item.service_name);
+        setServices(serviceNames);
+      }
+    } catch (err) {
+      console.error('Erro inesperado ao buscar serviços:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddService = async () => {
+    if (!newService.trim()) {
+      return;
+    }
+    
+    if (!memberId || memberId === 'temp-id') {
+      toast({
+        title: 'Erro',
+        description: 'ID de membro inválido',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    // Verificar se o serviço já existe
+    if (services.includes(newService.trim())) {
+      toast({
+        title: 'Serviço já existe',
+        description: 'Este serviço já está na sua lista',
+        status: 'info',
+        duration: 3000,
+        isClosable: true,
+      });
+      setNewService('');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const supabase = createClientComponentClient();
+      
+      // Adicionar o serviço na tabela member_services
+      const { error } = await supabase
+        .from('member_services')
+        .insert({
+          member_id: memberId,
+          service_name: newService.trim()
+          // Não é necessário incluir created_at, o PostgreSQL vai usar o valor DEFAULT (NOW())
+        });
+      
+      if (error) {
+        console.error('Erro ao adicionar serviço:', error);
+        toast({
+          title: 'Erro ao adicionar serviço',
+          description: error.message,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      
+      // Atualizar a lista local
+      setServices([...services, newService.trim()]);
+      setNewService('');
+      
+      toast({
+        title: 'Serviço adicionado',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.error('Erro inesperado ao adicionar serviço:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível adicionar o serviço',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddService();
+    }
+  };
+
+  const handleRemoveService = async (serviceToRemove: string) => {
+    if (!memberId || memberId === 'temp-id') {
+      toast({
+        title: 'Erro',
+        description: 'ID de membro inválido',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const supabase = createClientComponentClient();
+      
+      // Remover o serviço da tabela member_services
+      const { error } = await supabase
+        .from('member_services')
+        .delete()
+        .eq('member_id', memberId)
+        .eq('service_name', serviceToRemove);
+      
+      if (error) {
+        console.error('Erro ao remover serviço:', error);
+        toast({
+          title: 'Erro ao remover serviço',
+          description: error.message,
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+      
+      // Atualizar a lista local
+      setServices(services.filter(s => s !== serviceToRemove));
+      
+      toast({
+        title: 'Serviço removido',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (err) {
+      console.error('Erro inesperado ao remover serviço:', err);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível remover o serviço',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Box bg={bgColor} p={6} borderRadius="lg" boxShadow="sm" w="full" mb={4}>
+      <Flex justify="space-between" align="center" mb={4}>
+        <Heading size="md">Serviços Oferecidos</Heading>
+        {!showInput && (
+          <Button
+            leftIcon={<FiPlus />}
+            colorScheme="brand"
+            size="sm"
+            onClick={() => setShowInput(true)}
+            isLoading={loading}
+          >
+            Adicionar Serviço
+          </Button>
+        )}
+      </Flex>
+
+      {services.length === 0 && !showInput && (
+        <Text color="gray.500" fontSize="sm" my={4}>
+          Você não possui nenhum serviço cadastrado. Clique em "Adicionar Serviço" para começar.
+        </Text>
+      )}
+
+      {services.length > 0 && (
+        <Flex wrap="wrap" gap={2} mb={4}>
+          {services.map((service, index) => (
+            <Tag
+              key={index}
+              size="md"
+              borderRadius="full"
+              variant="solid"
+              bg={tagBg}
+              color={tagColor}
+            >
+              <TagLabel>{service}</TagLabel>
+              <TagCloseButton onClick={() => handleRemoveService(service)} isDisabled={loading} />
+            </Tag>
+          ))}
+        </Flex>
+      )}
+
+      {showInput && (
+        <VStack spacing={4} align="stretch" mt={4}>
+          <Tooltip label="Digite um serviço e pressione Enter para adicionar">
+            <Box position="relative">
+              <Input
+                ref={inputRef}
+                value={newService}
+                onChange={(e) => setNewService(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Digite um serviço e pressione Enter"
+                isDisabled={loading}
+                pr="4.5rem"
+              />
+              {loading && (
+                <Spinner
+                  position="absolute"
+                  right="1rem"
+                  top="50%"
+                  transform="translateY(-50%)"
+                  size="sm"
+                  color="brand.500"
+                />
+              )}
+              <Button
+                position="absolute"
+                right="0.5rem"
+                top="50%"
+                transform="translateY(-50%)"
+                size="sm"
+                colorScheme="brand"
+                onClick={() => {
+                  handleAddService();
+                  if (!newService.trim()) {
+                    setShowInput(false);
+                  }
+                }}
+                isDisabled={!newService.trim() || loading}
+              >
+                Adicionar
+              </Button>
+            </Box>
+          </Tooltip>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowInput(false)}
+            alignSelf="flex-end"
+          >
+            Cancelar
+          </Button>
+        </VStack>
+      )}
+    </Box>
+  );
+}

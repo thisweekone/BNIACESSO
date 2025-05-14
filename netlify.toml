@@ -1,0 +1,19 @@
+[build]
+  command = "chmod +x netlify-build.sh && ./netlify-build.sh"
+  publish = ".next"
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+  NEXT_TYPESCRIPT_CHECK = "0"
+  NEXT_IGNORE_TYPESCRIPT_ERRORS = "1"
+  NEXT_DISABLE_SOURCEMAPS = "1"
+  NODE_ENV = "production"
+  NODE_VERSION = "18.17.0"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

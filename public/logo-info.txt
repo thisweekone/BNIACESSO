@@ -1,0 +1,13 @@
+Para gerar um logo adequado para o BNI ACESSO, você pode:
+
+1. Criar um arquivo SVG ou PNG com o nome "logo.png" e colocá-lo nesta pasta public.
+
+2. Dimensões recomendadas: 200x200 pixels ou maior, com fundo transparente.
+
+3. O logo deve ser preferencialmente relacionado ao BNI (Business Network International) com cores e elementos que reflitam networking e conexões profissionais.
+
+4. Se você tiver acesso a ferramentas de design como Figma, Adobe Illustrator, ou até mesmo Canva, pode criar um logo personalizado.
+
+5. Alternativamente, se o BNI já possui um logo oficial, você pode obtê-lo no site oficial e adaptar para o BNI ACESSO.
+
+Uma vez que o arquivo logo.png seja colocado nesta pasta, a página de login irá carregá-lo automaticamente no lugar do placeholder.
