@@ -161,32 +161,37 @@ export default function SolicitacoesCadastro() {
     try {
       setLoading(true);
       
-      // 1. Criar conta de usuário
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: selectedRequest.email,
-        password: Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-4), // Senha temporária aleatória
-        email_confirm: true, // Confirmar email automaticamente
+      // Gerar senha temporária aleatória
+      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).toUpperCase().slice(-4);
+      
+      // 1. Usar nossa nova API para criar o usuário com permissões de admin
+      const response = await fetch('/api/admin/approve-member', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: selectedRequest.email,
+          password: tempPassword,
+          memberData: {
+            name: selectedRequest.name,
+            email: selectedRequest.email,
+            phone: selectedRequest.phone,
+            status: 'aprovado',
+            role: 'membro',
+            group_id: formData.group_id || null,
+            approved_at: new Date().toISOString(),
+            created_at: new Date().toISOString()
+          }
+        }),
       });
       
-      if (authError) throw authError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao criar usuário');
+      }
       
-      // 2. Criar perfil de membro aprovado
-      const { error: memberError } = await supabase
-        .from('members')
-        .insert({
-          name: selectedRequest.name,
-          email: selectedRequest.email,
-          phone: selectedRequest.phone,
-          status: 'aprovado',
-          role: 'membro',
-          group_id: formData.group_id || null,
-          approved_at: new Date().toISOString(),
-          created_at: new Date().toISOString()
-        });
-      
-      if (memberError) throw memberError;
-      
-      // 3. Atualizar status da solicitação
+      // 2. Atualizar status da solicitação
       const { error: updateError } = await supabase
         .from('registration_requests')
         .update({ status: 'aprovado' })
@@ -194,8 +199,8 @@ export default function SolicitacoesCadastro() {
       
       if (updateError) throw updateError;
       
-      // 4. Enviar email com instruções (simulado, isso seria feito por um backend)
-      console.log(`Enviar email para ${selectedRequest.email} com instruções para definir senha`);
+      // 3. Enviar email com instruções (simulado, isso seria feito por um backend)
+      console.log(`Enviar email para ${selectedRequest.email} com instruções para acessar a plataforma`);
       
       toast({
         title: 'Membro aprovado com sucesso!',
