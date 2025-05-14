@@ -24,7 +24,7 @@ import {
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowBackIcon, ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import { FiArrowLeft, FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function AtualizarSenha() {
   const [password, setPassword] = useState('');
@@ -158,7 +158,7 @@ export default function AtualizarSenha() {
                   />
                   <InputRightElement>
                     <Button size="sm" onClick={togglePasswordVisibility} bg="transparent">
-                      {passwordVisible ? <ViewOffIcon /> : <ViewIcon />}
+                      {passwordVisible ? <FiEyeOff /> : <FiEye />}
                     </Button>
                   </InputRightElement>
                 </InputGroup>
@@ -178,7 +178,7 @@ export default function AtualizarSenha() {
                   />
                   <InputRightElement>
                     <Button size="sm" onClick={toggleConfirmPasswordVisibility} bg="transparent">
-                      {confirmPasswordVisible ? <ViewOffIcon /> : <ViewIcon />}
+                      {confirmPasswordVisible ? <FiEyeOff /> : <FiEye />}
                     </Button>
                   </InputRightElement>
                 </InputGroup>

@@ -20,7 +20,7 @@ import {
 } from '@chakra-ui/react';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
-import { ArrowBackIcon } from '@chakra-ui/icons';
+import { FiArrowLeft } from 'react-icons/fi';
 
 export default function RecuperarSenha() {
   const [email, setEmail] = useState('');
@@ -134,12 +134,11 @@ export default function RecuperarSenha() {
         )}
         
         <Flex justify="center" mt={6}>
-          <ChakraLink as={Link} href="/login" color="brand.500">
-            <Flex align="center">
-              <ArrowBackIcon mr={2} />
-              Voltar para login
-            </Flex>
-          </ChakraLink>
+          <Link href="/login" passHref>
+            <Button leftIcon={<FiArrowLeft />} variant="outline" size="sm" mb={4}>
+              Voltar para o Login
+            </Button>
+          </Link>
         </Flex>
       </Box>
     </Container>
