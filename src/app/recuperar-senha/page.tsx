@@ -46,12 +46,19 @@ export default function RecuperarSenha() {
     try {
       setLoading(true);
       
-      // Enviar email de recuperação usando o Supabase
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/atualizar-senha`,
+      // Enviar email de recuperação usando nosso endpoint personalizado
+      const response = await fetch('/api/email/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
       });
       
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Falha ao enviar email de recuperação');
+      }
       
       setEmailSent(true);
       toast({
