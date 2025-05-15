@@ -78,12 +78,23 @@ export default function RecuperarSenha() {
   return (
     <Container maxW="lg" py={12}>
       <Flex direction="column" align="center" mb={6}>
-        <Image 
-          src="/logo.png" 
-          alt="BNI ACESSO" 
-          maxW="200px"
-          mb={6}
-        />
+        <Box
+          bg="red.500"
+          color="white"
+          fontWeight="bold"
+          fontSize="xl"
+          p={4}
+          borderRadius="full"
+          width="100px"
+          height="100px"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          mb={4}
+          boxShadow="md"
+        >
+          BNI
+        </Box>
         <Heading as="h1" size="xl" textAlign="center" mb={4}>
           Recuperar Senha
         </Heading>
