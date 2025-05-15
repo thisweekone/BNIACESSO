@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ProfileImporter } from "@/components/profile/ProfileImporter";
 import {
   FormControl,
   FormLabel,
@@ -115,6 +116,7 @@ export default function MemberProfileForm({ initialData, onSubmit }: MemberProfi
     }
   );
   const [loading, setLoading] = useState(false);
+  const [isImporterOpen, setIsImporterOpen] = useState(false);
   
   // Estado adicional para rastrear se estamos usando a nova estrutura de especialidades
   const [usingSpecialtyId, setUsingSpecialtyId] = useState(!!initialData?.specialty_id);
@@ -200,17 +202,73 @@ export default function MemberProfileForm({ initialData, onSubmit }: MemberProfi
   
   // Função para lidar com a seleção de especialidade
   function handleSpecialtySelect(specialtyId: string, specialtyObj: any) {
-    setUsingSpecialtyId(true);
+    // Atualiza o ID da especialidade e o nome em um único lugar
     setForm(prev => ({
       ...prev,
       specialty_id: specialtyId,
-      specialty: specialtyObj ? specialtyObj.name : ''
+      specialty: specialtyObj?.name || prev.specialty
     }));
+    setUsingSpecialtyId(true);
+  }
+  
+  // Função para processar os dados importados do perfil BNI
+  function handleProfileImport(profileData: any) {
+    if (!profileData) return;
+    
+    try {
+      // Mapeia os dados do perfil BNI para o formato do formulário
+      setForm(prev => ({
+        ...prev,
+        name: profileData.nome || prev.name,
+        company: profileData.empresa || prev.company,
+        specialty: profileData.industria || prev.specialty,
+        bio: profileData.meuNegocio || prev.bio,
+        icp: profileData.referenciaIdeal || prev.icp,
+        tips: profileData.parceiroIdeal || prev.tips,
+        cases: profileData.historiaFavorita || prev.cases,
+        profile_description: `${profileData.problemaResolvido || ''} ${profileData.produtoPrincipal || ''}`.trim() || prev.profile_description,
+        email: profileData.contatos?.email || prev.email,
+        phone: profileData.contatos?.telefone || prev.phone,
+        website: profileData.contatos?.website || prev.website,
+      }));
+      
+      toast({
+        title: "Perfil importado com sucesso",
+        description: "Os dados foram carregados no formulário. Revise e complete as informações conforme necessário.",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Erro ao processar dados importados:", error);
+      toast({
+        title: "Erro ao processar dados",
+        description: "Não foi possível processar os dados importados.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
   }
 
   return (
-    <Box as="form" onSubmit={handleSubmit}>
-      <VStack spacing={6} align="flex-start">
+    <Box as="form" onSubmit={handleSubmit} w="100%" px={4}>
+      <ProfileImporter 
+        isOpen={isImporterOpen} 
+        onClose={() => setIsImporterOpen(false)} 
+        onImport={handleProfileImport} 
+      />
+      <VStack spacing={6} align="stretch">
+        <Flex justify="flex-end">
+          <Button 
+            onClick={() => setIsImporterOpen(true)} 
+            colorScheme="red" 
+            variant="outline"
+            leftIcon={<FiSearch />}
+          >
+            Importar do Perfil BNI
+          </Button>
+        </Flex>
         <Heading size="md">Informações Principais</Heading>
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} width="full">
           <FormControl isRequired>
